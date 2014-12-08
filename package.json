@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/bleroy/flasync/issues"
   },
-  "homepage": "https://github.com/bleroy/flasync"
+  "homepage": "https://github.com/bleroy/flasync",
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "mocha": "^2.0.1"
+  }
 }
