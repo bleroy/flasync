@@ -16,14 +16,22 @@ describe('Flasync Fluent Async API helper', function() {
       this.output.push(text);
       return this;
     });
-    // And one asynchronous method
-    this.write = this.async(function(text, next) {
+    // And asynchronous methods
+    this.write = this.async(
+      this._write = function(text, next) {
       process.nextTick(function () {
         self._writeSync(text);
         next();
       });
       return this;
     });
+    // An async method that calls another
+    this.writeToken = this.async(
+      this._writeToken = function(text, next) {
+
+      self._write('[' + text + ']', next);
+      return this;
+    })
   };
 
   it('behaves as a synchronous API as long as only synchronous methods are called', function() {
@@ -113,5 +121,19 @@ describe('Flasync Fluent Async API helper', function() {
         })
     })
       .to.throw('oops');
+  });
+
+  it('lets asynchronous methods call other asynchronous methods', function(done) {
+    var api = new Api();
+
+    api
+      .write('foo')
+      .writeToken('bar')
+      .writeToken('baz')
+      .write('done')
+      .then(function() {
+        expect(api.output).to.deep.equal(['foo', '[bar]', '[baz]', 'done']);
+        done();
+      })
   });
 });
