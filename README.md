@@ -20,7 +20,9 @@ var fs = require('fs');
 var Dump = function Dump() {
   flasync(this);
 
-  this.write = this.asyncify(function(text) {
+  this.write = this.asyncify(
+    this._writeSync = function(text) {
+
     Console.log(text);
     return this;
   });
@@ -28,13 +30,20 @@ var Dump = function Dump() {
   this.fromFile = this.async(function(path, next) {
     fs.readFile(path, function (err, text) {
       if (err) throw err;
-      Console.log(text);
+      this._writeSync(text);
       next();
     });
     return this;
   });
 };
 ```
+
+Notice how the asynchronous method calls the non-asynchronified private
+version of write, to avoid wasteful and unclear asynchronous calls to a
+method that does not require to be called asynchronously. Synchronous
+methods that need to call other synchronous methods should do the same.
+Internally, methods should always call the private synchronous versions
+of synchronous methods.
 
 Using an API built with flasync
 -------------------------------

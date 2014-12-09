@@ -10,14 +10,16 @@ describe('Flasync Fluent Async API helper', function() {
     this.output = output || [];
     flasync(this);
     // It has one synchronous method
-    this.writeSync = this.asyncify(function(text) {
+    this.writeSync = this.asyncify(
+      this._writeSync = function(text) {
+
       this.output.push(text);
       return this;
     });
     // And one asynchronous method
     this.write = this.async(function(text, next) {
       process.nextTick(function () {
-        self.output.push(text);
+        self._writeSync(text);
         next();
       });
       return this;
