@@ -11,25 +11,25 @@ describe('Flasync Fluent Async API helper', function() {
     flasync(this);
     // It has one synchronous method
     this.writeSync = this.asyncify(
-      this._writeSync = function(text) {
+      this._writeSync = function(label, text) {
 
-      this.output.push(text);
+      this.output.push(label + ':' + text);
       return this;
     });
     // And asynchronous methods
     this.write = this.async(
-      this._write = function(text, next) {
+      this._write = function(label, text, next) {
       process.nextTick(function () {
-        self._writeSync(text);
+        self._writeSync(label, text);
         next();
       });
       return this;
     });
     // An async method that calls another
     this.writeToken = this.async(
-      this._writeToken = function(text, next) {
+      this._writeToken = function(label, text, next) {
 
-      self._write('[' + text + ']', next);
+      self._write(label, '[' + text + ']', next);
       return this;
     })
   };
@@ -38,22 +38,22 @@ describe('Flasync Fluent Async API helper', function() {
     var api = new Api();
 
     api
-      .writeSync('foo')
-      .writeSync('bar')
-      .writeSync('baz');
+      .writeSync('fou', 'foo')
+      .writeSync('barre', 'bar')
+      .writeSync('base', 'baz');
 
-    expect(api.output).to.deep.equal(['foo', 'bar', 'baz']);
+    expect(api.output).to.deep.equal(['fou:foo', 'barre:bar', 'base:baz']);
   });
 
   it('preserves call order even for synchronous methods called after an asynchronous one', function(done) {
     var api = new Api();
 
     api
-      .writeSync('foo')
-      .write('bar')
-      .writeSync('baz')
+      .writeSync('fou', 'foo')
+      .write('barre', 'bar')
+      .writeSync('base', 'baz')
       .then(function() {
-        expect(api.output).to.deep.equal(['foo', 'bar', 'baz']);
+        expect(api.output).to.deep.equal(['fou:foo', 'barre:bar', 'base:baz']);
         done();
       });
   });
@@ -62,7 +62,7 @@ describe('Flasync Fluent Async API helper', function() {
     var api = new Api();
 
     api
-      .write('foo')
+      .write('fou', 'foo')
       .then(function(next) {
         api.output.push('bar');
         next();
@@ -72,7 +72,7 @@ describe('Flasync Fluent Async API helper', function() {
         next();
       })
       .then(function() {
-        expect(api.output).to.deep.equal(['foo', 'bar', 'baz']);
+        expect(api.output).to.deep.equal(['fou:foo', 'bar', 'baz']);
         done();
       });
   });
@@ -81,17 +81,31 @@ describe('Flasync Fluent Async API helper', function() {
     var api = new Api();
 
     api
-      .write('foo')
+      .write('fou', 'foo')
       .then(function(next) {
         api
-          .writeSync('bar')
-          .write('baz')
+          .writeSync('barre', 'bar')
+          .write('base', 'baz')
           .then(function() {
-            expect(api.output).to.deep.equal(['foo', 'bar', 'baz']);
+            expect(api.output).to.deep.equal(['fou:foo', 'barre:bar', 'base:baz']);
             done();
           });
         next();
       });
+  });
+
+  it('lets asynchronous methods call other asynchronous methods', function(done) {
+    var api = new Api();
+
+    api
+      .write('fou', 'foo')
+      .writeToken('barre', 'bar')
+      .writeToken('base', 'baz')
+      .write('donne', 'done')
+      .then(function() {
+        expect(api.output).to.deep.equal(['fou:foo', 'barre:[bar]', 'base:[baz]', 'donne:done']);
+        done();
+      })
   });
 
   it('can handle exceptions and suspend execution', function(done) {
@@ -121,19 +135,5 @@ describe('Flasync Fluent Async API helper', function() {
         })
     })
       .to.throw('oops');
-  });
-
-  it('lets asynchronous methods call other asynchronous methods', function(done) {
-    var api = new Api();
-
-    api
-      .write('foo')
-      .writeToken('bar')
-      .writeToken('baz')
-      .write('done')
-      .then(function() {
-        expect(api.output).to.deep.equal(['foo', '[bar]', '[baz]', 'done']);
-        done();
-      })
   });
 });
