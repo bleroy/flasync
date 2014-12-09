@@ -41,12 +41,12 @@ var Dump = function Dump() {
 };
 ```
 
-Notice how the asynchronous method calls the non-asynchronified private
+Notice how the `fromFile` method calls the non-asynchronified private
 version of write, to avoid wasteful and unclear asynchronous calls to a
-method that does not require to be called asynchronously. Synchronous
-methods that need to call other synchronous methods should do the same.
-Internally, methods should always call the private synchronous versions
-of synchronous methods.
+method that does not require to be called asynchronously.
+Methods that need to call other methods should do the same.
+Internally, methods should always call the private versions of other
+methods.
 
 Using an API built with flasync
 -------------------------------
