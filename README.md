@@ -21,16 +21,18 @@ var Dump = function Dump() {
   flasync(this);
 
   this.write = this.asyncify(
-    this._writeSync = function(text) {
+    this._write = function(text) {
 
     Console.log(text);
     return this;
   });
 
-  this.fromFile = this.async(function(path, next) {
+  this.fromFile = this.async(
+    this._fromFile = function(path, next) {
+    
     fs.readFile(path, function (err, text) {
       if (err) throw err;
-      this._writeSync(text);
+      this._write(text);
       next();
     });
     return this;
