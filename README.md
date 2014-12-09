@@ -19,6 +19,7 @@ var fs = require('fs');
 
 var Dump = function Dump() {
   flasync(this);
+  var self = this;
 
   this.write = this.asyncify(
     this._write = function(text) {
@@ -32,7 +33,7 @@ var Dump = function Dump() {
     
     fs.readFile(path, function (err, text) {
       if (err) throw err;
-      this._write(text);
+      self._write(text);
       next();
     });
     return this;
