@@ -106,7 +106,9 @@ describe('Flasync Fluent Async API helper', function() {
             expect(api.output).to.deep.equal(['fou:foo', 'barre:bar']);
             next();
           })
-          .finally(done);
+          .finally(function() {
+            api.finally(done);
+          });
       });
   });
 
