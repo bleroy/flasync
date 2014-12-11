@@ -94,6 +94,22 @@ describe('Flasync Fluent Async API helper', function() {
       });
   });
 
+  it('can end the chain and restart it later', function(done) {
+    var api = new Api();
+
+    api
+      .write('fou', 'foo')
+      .finally(function() {
+        api
+          .write('barre', 'bar')
+          .then(function(next) {
+            expect(api.output).to.deep.equal(['fou:foo', 'barre:bar']);
+            next();
+          })
+          .finally(done);
+      });
+  });
+
   it('lets asynchronous methods call other asynchronous methods', function(done) {
     var api = new Api();
 
