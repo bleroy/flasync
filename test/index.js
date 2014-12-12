@@ -142,6 +142,20 @@ describe('Flasync Fluent Async API helper', function() {
       .finally(done);
   });
 
+  it('can nest finally inside an async method by using an inner api instance', function(done) {
+    // This is a working version of the previous test.
+    var api = new Api();
+
+    api
+      .then(function thenRegisterNextTick(next) {
+        var innerApi = new Api();
+        process.nextTick(function onTick() {
+          innerApi.finally(next);
+        });
+      })
+      .finally(done);
+  });
+
   it('lets asynchronous methods call other asynchronous methods', function(done) {
     var api = new Api();
 
