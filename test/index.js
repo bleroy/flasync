@@ -11,23 +11,24 @@ describe('Flasync Fluent Async API helper', function() {
     flasync(this);
     // It has one synchronous method
     this.writeSync = this.asyncify(
-      this._writeSync = function(label, text) {
+      this._writeSync = function writeSync(label, text) {
 
-      this.output.push(label + ':' + text);
-      return this;
-    });
+        this.output.push(label + ':' + text);
+        return this;
+      }
+    );
     // And asynchronous methods
     this.write = this.async(
-      this._write = function(label, text, next) {
-      process.nextTick(function () {
-        self._writeSync(label, text);
-        next();
-      });
+      this._write = function write(label, text, next) {
+        process.nextTick(function () {
+          self._writeSync(label, text);
+          next();
+        });
       return this;
     });
     // An async method that calls another
     this.writeToken = this.async(
-      this._writeToken = function(label, text, next) {
+      this._writeToken = function writeToken(label, text, next) {
 
       self._write(label, '[' + text + ']', next);
       return this;
@@ -52,7 +53,7 @@ describe('Flasync Fluent Async API helper', function() {
       .writeSync('fou', 'foo')
       .write('barre', 'bar')
       .writeSync('base', 'baz')
-      .then(function() {
+      .then(function thenAssertAndFinish() {
         expect(api.output).to.deep.equal(['fou:foo', 'barre:bar', 'base:baz']);
         done();
       });
@@ -63,15 +64,15 @@ describe('Flasync Fluent Async API helper', function() {
 
     api
       .write('fou', 'foo')
-      .then(function(next) {
+      .then(function thenWriteBar(next) {
         api.output.push('bar');
         next();
       })
-      .then(function(next) {
+      .then(function thenWriteBaz(next) {
         api.output.push('baz');
         next();
       })
-      .then(function() {
+      .then(function thenAssertAndFinish() {
         expect(api.output).to.deep.equal(['fou:foo', 'bar', 'baz']);
         done();
       });
@@ -82,11 +83,11 @@ describe('Flasync Fluent Async API helper', function() {
 
     api
       .write('fou', 'foo')
-      .then(function(next) {
+      .then(function thenMakeNestedCalls(next) {
         api
           .writeSync('barre', 'bar')
           .write('base', 'baz')
-          .then(function() {
+          .then(function thenAssertAndFinish() {
             expect(api.output).to.deep.equal(['fou:foo', 'barre:bar', 'base:baz']);
             done();
           });
@@ -99,17 +100,46 @@ describe('Flasync Fluent Async API helper', function() {
 
     api
       .write('fou', 'foo')
-      .finally(function() {
+      .writeSync('base', 'baz')
+      .finally(function finallyChainMoreCalls() {
         api
           .write('barre', 'bar')
-          .then(function(next) {
-            expect(api.output).to.deep.equal(['fou:foo', 'barre:bar']);
+          .then(function thenAssertAndContinue(next) {
+            expect(api.output).to.deep.equal(['fou:foo', 'base:baz', 'barre:bar']);
             next();
           })
-          .finally(function() {
-            api.finally(done);
+          .finally(function finallyMakeAnotherCall() {
+            api.finally(function finallyMakeYetAnotherCall() {
+              api.finally(done);});
           });
       });
+  });
+
+  it('can end the chain after synchronous methods only as well', function(done) {
+    var api = new Api();
+
+    api
+      .writeSync('fou', 'foo')
+      .finally(function finallyAssertAndFinish() {
+        expect(api.output).to.deep.equal(['fou:foo']);
+        done();
+      });
+  });
+
+  it.skip('can nest finally inside an async method', function(done) {
+    // This is skipped, but left in to demonstrate a subtle case of
+    // deadlock: next is never called because the execution of the
+    // finally is contingent on the outer then's next callback
+    // being called.
+    var api = new Api();
+
+    api
+      .then(function thenRegisterNextTick(next) {
+        process.nextTick(function onTick() {
+          api.finally(next);
+        });
+      })
+      .finally(done);
   });
 
   it('lets asynchronous methods call other asynchronous methods', function(done) {
@@ -120,7 +150,7 @@ describe('Flasync Fluent Async API helper', function() {
       .writeToken('barre', 'bar')
       .writeToken('base', 'baz')
       .write('donne', 'done')
-      .then(function() {
+      .then(function thenAssertAndFinish() {
         expect(api.output).to.deep.equal(['fou:foo', 'barre:[bar]', 'base:[baz]', 'donne:done']);
         done();
       })
@@ -131,14 +161,14 @@ describe('Flasync Fluent Async API helper', function() {
     var hit = false;
 
     api
-      .onError(function(err) {
+      .onError(function onError(err) {
         expect(hit).to.be.false;
         done();
       })
-      .then(function(next) {
+      .then(function thenThrow(next) {
         throw new Error('oops');
       })
-      .then(function(next) {
+      .then(function thenSetHitToTrue(next) {
         hit = true;
       });
   });
@@ -146,9 +176,9 @@ describe('Flasync Fluent Async API helper', function() {
   it('lets exceptions through if no error handler is defined', function() {
     var api = new Api();
 
-    expect(function() {
+    expect(function asynchronouslyThrow() {
       api
-        .then(function(next) {
+        .then(function thenThrow(next) {
           throw new Error('oops');
         })
     })
