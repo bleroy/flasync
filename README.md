@@ -130,3 +130,15 @@ dump.onError(function(err) {
 ```
 
 The error handler has to be added before the throwing method is called.
+
+Blog posts about this library
+-----------------------------
+
+For more info...
+
+1. [API Requirements](https://weblogs.asp.net/bleroy/fluent-asynchronous-api-1-api-requirements)
+2. [Building an API](https://weblogs.asp.net/bleroy/fluent-asynchronous-api-2-building-an-api)
+3. [The helper library](https://weblogs.asp.net/bleroy/fluent-asynchronous-api-3-the-helper-library)
+4. [Nope, Q won't work](https://weblogs.asp.net/bleroy/fluent-asynchronous-api-4-nope-q-won%E2%80%99t-work)
+5. [Internally calling methods](https://weblogs.asp.net/bleroy/fluent-asynchronous-api-5-internally-calling-methods)
+6. [Recursive calls](https://weblogs.asp.net/bleroy/fluent-asynchronous-api-6-recursive-tail-calls)
