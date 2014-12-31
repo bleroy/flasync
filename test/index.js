@@ -170,7 +170,7 @@ describe('Flasync Fluent Async API helper', function() {
       })
   });
 
-  it('can handle exceptions and suspend execution', function(done) {
+  it('can handle synchronous exceptions and suspend execution', function(done) {
     var api = new Api();
     var hit = false;
 
@@ -184,6 +184,28 @@ describe('Flasync Fluent Async API helper', function() {
       })
       .then(function thenSetHitToTrue(next) {
         hit = true;
+      });
+  });
+
+  it('can handle asynchronous exceptions and suspend execution', function(done) {
+    var api = new Api();
+    var hit = false;
+
+    api
+      .onError(function onError(err) {
+        expect(hit).to.be.false;
+        done();
+      })
+      .then(function thenThrow(next) {
+        process.nextTick(function() {
+          next(new Error('oops'));
+        });
+      })
+      .then(function thenSetHitToTrue(next) {
+        process.nextTick(function() {
+          hit = true;
+          next();
+        });
       });
   });
 
