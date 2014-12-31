@@ -40,7 +40,10 @@ var Dump = function Dump() {
     this._fromFile = function(path, next) {
     
     fs.readFile(path, function (err, text) {
-      if (err) throw err;
+      if (err) {
+        next(err);
+        return;
+      }
       self._write(text);
       next();
     });
